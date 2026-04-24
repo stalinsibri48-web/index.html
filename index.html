@@ -2,119 +2,64 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <script src="https://admin.tago.io/dist/custom-widget.sdk.min.js"></script>
+    <title>Dashboard Distancia</title>
     <style>
-        /* Diseño Chato y Moderno */
-        body { 
-            background: #111; 
-            color: white; 
-            font-family: 'Segoe UI', Tahoma, sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0; 
-            overflow: hidden;
-        }
+        body { background: #0f0f0f; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #1a1a1a; padding: 40px; border-radius: 30px; border: 2px solid #333; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
+        .distancia-valor { font-size: 5rem; font-weight: 800; margin: 10px 0; color: #fff; }
+        .semaforo-chato { display: flex; gap: 20px; background: #222; padding: 20px; border-radius: 100px; border: 2px solid #444; margin: 20px 0; }
+        .luz { width: 65px; height: 65px; border-radius: 50%; background: #111; transition: 0.3s; }
         
-        .contenedor {
-            background: #1e1e1e;
-            padding: 30px;
-            border-radius: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            border: 1px solid #333;
-            text-align: center;
-        }
-
-        .semaforo-horizontal {
-            display: flex;
-            gap: 20px;
-            background: #282828;
-            padding: 20px;
-            border-radius: 100px;
-            border: 3px solid #333;
-            margin-bottom: 20px;
-        }
-
-        .luz {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: #1a1a1a;
-            border: 2px solid #222;
-            transition: all 0.4s ease;
-        }
-
-        /* Colores Planos (Chatos) */
-        .verde.active { background: #00ff88; box-shadow: 0 0 35px rgba(0, 255, 136, 0.6); border-color: #aaffdd; }
-        .amarillo.active { background: #ffcc00; box-shadow: 0 0 35px rgba(255, 204, 0, 0.6); border-color: #ffffaa; }
-        .rojo.active { background: #ff4444; box-shadow: 0 0 35px rgba(255, 68, 68, 0.6); border-color: #ffcccc; }
-
-        #distancia-texto {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin: 10px 0;
-            color: #fff;
-        }
-
-        .etiqueta {
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-size: 0.8rem;
-        }
+        /* Colores Planos Activos */
+        .rojo.active { background: #ff4444; box-shadow: 0 0 30px #ff4444; }
+        .amarillo.active { background: #ffcc00; box-shadow: 0 0 30px #ffcc00; }
+        .verde.active { background: #00ff88; box-shadow: 0 0 30px #00ff88; }
+        
+        .status { font-size: 0.8rem; color: #555; text-transform: uppercase; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
-    <div class="contenedor">
-        <div class="etiqueta">Sensor Ultrasonido</div>
-        <div id="distancia-texto">--- cm</div>
-        
-        <div class="semaforo-horizontal">
-            <div id="luz-verde" class="luz verde"></div>
-            <div id="luz-amarillo" class="luz amarillo"></div>
-            <div id="luz-rojo" class="luz rojo"></div>
+    <div class="card">
+        <div class="status" id="con-status">Buscando Sensor...</div>
+        <div class="distancia-valor" id="num">---</div>
+        <div class="semaforo-chato">
+            <div id="v" class="luz verde"></div>
+            <div id="a" class="luz amarillo"></div>
+            <div id="r" class="luz rojo"></div>
         </div>
-        
-        <div id="mensaje" style="color: #444;">Esperando datos del ESP32...</div>
+        <div style="color:#666">CENTÍMETROS</div>
     </div>
 
     <script>
-        // Función para resetear luces
-        function apagarLuces() {
-            document.getElementById('luz-verde').classList.remove('active');
-            document.getElementById('luz-amarillo').classList.remove('active');
-            document.getElementById('luz-rojo').classList.remove('active');
+        const TOKEN = "13216bb3-4a57-408e-9b3e-70c73a628135";
+
+        async function refreshData() {
+            try {
+                // Pedimos el último dato a la API de TagoIO directamente
+                const resp = await fetch('https://api.tago.io/data?variable=distancia&qty=1', {
+                    headers: { 'Device-Token': TOKEN }
+                });
+                const data = await resp.json();
+
+                if (data.status && data.result.length > 0) {
+                    const val = parseFloat(data.result[0].value);
+                    document.getElementById('num').innerText = val.toFixed(1);
+                    document.getElementById('con-status').innerText = "En Línea";
+                    document.getElementById('con-status').style.color = "#00ff88";
+
+                    // Lógica de luces
+                    document.getElementById('r').classList.toggle('active', val < 10);
+                    document.getElementById('a').classList.toggle('active', val >= 10 && val <= 30);
+                    document.getElementById('v').classList.toggle('active', val > 30);
+                }
+            } catch (e) {
+                document.getElementById('con-status').innerText = "Error de Conexión";
+            }
         }
 
-        // Conexión con TagoIO
-        window.TagoIO.onRealtime((data) => {
-            const list = Array.isArray(data) ? data : [data];
-            const sensor = list.find(item => item.variable === 'distancia');
-
-            if (sensor) {
-                const valor = parseFloat(sensor.value);
-                document.getElementById('distancia-texto').innerText = valor.toFixed(1) + " cm";
-                document.getElementById('mensaje').innerText = "Sistema Online";
-                document.getElementById('mensaje').style.color = "#00ff88";
-
-                apagarLuces();
-
-                // Lógica de colores basada en tu código de ESP32
-                if (valor < 10) {
-                    document.getElementById('luz-rojo').classList.add('active');
-                } else if (valor >= 10 && valor <= 30) {
-                    document.getElementById('luz-amarillo').classList.add('active');
-                } else {
-                    document.getElementById('luz-verde').classList.add('active');
-                }
-            }
-        });
-
-        // Inicializar Widget
-        window.TagoIO.ready();
+        // Actualiza cada 1 segundo
+        setInterval(refreshData, 1000);
     </script>
 </body>
 </html>
