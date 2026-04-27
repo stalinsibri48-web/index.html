@@ -145,6 +145,36 @@ body {
 .amarillo.active { background: yellow; box-shadow: 0 0 20px yellow; }
 .verde.active { background: lime; box-shadow: 0 0 20px lime; }
 
+/* INICIO Y FINAL */
+.start-label, .end-label {
+    position: absolute;
+    bottom: 210px;
+    color: #000;
+    font-weight: 700;
+    background: rgba(255,255,255,0.7);
+    padding: 6px 12px;
+    border-radius: 10px;
+}
+.start-label { left: 20px; }
+.end-label { right: 20px; }
+
+/* SEMAFORO FINAL */
+.final-semaforo {
+    position: absolute;
+    bottom: 80px;
+    right: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #222;
+    padding: 10px;
+    border-radius: 20px;
+}
+.final-semaforo .luz {
+    width: 30px;
+    height: 30px;
+}
+
 </style>
 </head>
 <body>
@@ -156,6 +186,15 @@ body {
 </div>
 
 <div class="road"></div>
+
+<div class="start-label">INICIO</div>
+<div class="end-label">FINAL</div>
+
+<div class="final-semaforo">
+    <div id="v2" class="luz verde"></div>
+    <div id="a2" class="luz amarillo"></div>
+    <div id="r2" class="luz rojo"></div>
+</div>
 
 <div class="car">
     <div class="wheel left"></div>
@@ -191,6 +230,11 @@ async function refreshData() {
             document.getElementById('r').classList.toggle('active', val < 10);
             document.getElementById('a').classList.toggle('active', val >= 10 && val <= 30);
             document.getElementById('v').classList.toggle('active', val > 30);
+
+            // sincronizar semaforo final
+            document.getElementById('r2').classList.toggle('active', val < 10);
+            document.getElementById('a2').classList.toggle('active', val >= 10 && val <= 30);
+            document.getElementById('v2').classList.toggle('active', val > 30);
 
             // mover carro
             moverCarro(val);
