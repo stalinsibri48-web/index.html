@@ -1,65 +1,203 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard Distancia</title>
-    <style>
-        body { background: #0f0f0f; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #1a1a1a; padding: 40px; border-radius: 30px; border: 2px solid #333; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
-        .distancia-valor { font-size: 5rem; font-weight: 800; margin: 10px 0; color: #fff; }
-        .semaforo-chato { display: flex; gap: 20px; background: #222; padding: 20px; border-radius: 100px; border: 2px solid #444; margin: 20px 0; }
-        .luz { width: 65px; height: 65px; border-radius: 50%; background: #111; transition: 0.3s; }
-        
-        /* Colores Planos Activos */
-        .rojo.active { background: #ff4444; box-shadow: 0 0 30px #ff4444; }
-        .amarillo.active { background: #ffcc00; box-shadow: 0 0 30px #ffcc00; }
-        .verde.active { background: #00ff88; box-shadow: 0 0 30px #00ff88; }
-        
-        .status { font-size: 0.8rem; color: #555; text-transform: uppercase; letter-spacing: 2px; }
-    </style>
+<meta charset="UTF-8">
+<title>Dashboard Distancia</title>
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(#87ceeb, #e0f7ff);
+}
+
+/* ESCENARIO */
+.sky {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.sun {
+    position: absolute;
+    top: 40px;
+    right: 60px;
+    width: 100px;
+    height: 100px;
+    background: #ffd93d;
+    border-radius: 50%;
+    box-shadow: 0 0 50px #ffd93d;
+}
+
+.cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50px;
+    width: 120px;
+    height: 60px;
+    opacity: 0.9;
+    animation: moveClouds 60s linear infinite;
+}
+
+.cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+}
+
+.cloud::before {
+    width: 70px;
+    height: 70px;
+    top: -30px;
+    left: 10px;
+}
+
+.cloud::after {
+    width: 90px;
+    height: 90px;
+    top: -40px;
+    right: 10px;
+}
+
+@keyframes moveClouds {
+    from { transform: translateX(-200px); }
+    to { transform: translateX(120vw); }
+}
+
+/* CARRETERA */
+.road {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 200px;
+    background: #333;
+}
+
+/* CARRO */
+.car {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 80px;
+    background: #ff4444;
+    border-radius: 20px;
+}
+
+.car::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    left: 40px;
+    width: 120px;
+    height: 40px;
+    background: #ff6666;
+    border-radius: 15px;
+}
+
+.wheel {
+    position: absolute;
+    bottom: -20px;
+    width: 40px;
+    height: 40px;
+    background: black;
+    border-radius: 50%;
+}
+
+.wheel.left { left: 20px; }
+.wheel.right { right: 20px; }
+
+/* DASHBOARD */
+.card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.7);
+    padding: 30px;
+    border-radius: 25px;
+    text-align: center;
+    color: white;
+}
+
+.distancia-valor {
+    font-size: 4rem;
+}
+
+.semaforo-chato {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.luz {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #111;
+}
+
+.rojo.active { background: red; box-shadow: 0 0 20px red; }
+.amarillo.active { background: yellow; box-shadow: 0 0 20px yellow; }
+.verde.active { background: lime; box-shadow: 0 0 20px lime; }
+
+</style>
 </head>
 <body>
 
-    <div class="card">
-        <div class="status" id="con-status">Buscando Sensor...</div>
-        <div class="distancia-valor" id="num">---</div>
-        <div class="semaforo-chato">
-            <div id="v" class="luz verde"></div>
-            <div id="a" class="luz amarillo"></div>
-            <div id="r" class="luz rojo"></div>
-        </div>
-        <div style="color:#666">CENTÍMETROS</div>
+<div class="sky">
+    <div class="sun"></div>
+    <div class="cloud" style="top:100px; left:0;"></div>
+    <div class="cloud" style="top:200px; left:200px;"></div>
+</div>
+
+<div class="road"></div>
+
+<div class="car">
+    <div class="wheel left"></div>
+    <div class="wheel right"></div>
+</div>
+
+<div class="card">
+    <div id="con-status">Buscando Sensor...</div>
+    <div class="distancia-valor" id="num">---</div>
+    <div class="semaforo-chato">
+        <div id="v" class="luz verde"></div>
+        <div id="a" class="luz amarillo"></div>
+        <div id="r" class="luz rojo"></div>
     </div>
+    <div>CENTÍMETROS</div>
+</div>
 
-    <script>
-        const TOKEN = "13216bb3-4a57-408e-9b3e-70c73a628135";
+<script>
+const TOKEN = "13216bb3-4a57-408e-9b3e-70c73a628135";
 
-        async function refreshData() {
-            try {
-                // Pedimos el último dato a la API de TagoIO directamente
-                const resp = await fetch('https://api.tago.io/data?variable=distancia&qty=1', {
-                    headers: { 'Device-Token': TOKEN }
-                });
-                const data = await resp.json();
+async function refreshData() {
+    try {
+        const resp = await fetch('https://api.tago.io/data?variable=distancia&qty=1', {
+            headers: { 'Device-Token': TOKEN }
+        });
+        const data = await resp.json();
 
-                if (data.status && data.result.length > 0) {
-                    const val = parseFloat(data.result[0].value);
-                    document.getElementById('num').innerText = val.toFixed(1);
-                    document.getElementById('con-status').innerText = "En Línea";
-                    document.getElementById('con-status').style.color = "#00ff88";
+        if (data.status && data.result.length > 0) {
+            const val = parseFloat(data.result[0].value);
+            document.getElementById('num').innerText = val.toFixed(1);
+            document.getElementById('con-status').innerText = "En Línea";
 
-                    // Lógica de luces
-                    document.getElementById('r').classList.toggle('active', val < 10);
-                    document.getElementById('a').classList.toggle('active', val >= 10 && val <= 30);
-                    document.getElementById('v').classList.toggle('active', val > 30);
-                }
-            } catch (e) {
-                document.getElementById('con-status').innerText = "Error de Conexión";
-            }
+            document.getElementById('r').classList.toggle('active', val < 10);
+            document.getElementById('a').classList.toggle('active', val >= 10 && val <= 30);
+            document.getElementById('v').classList.toggle('active', val > 30);
         }
+    } catch (e) {
+        document.getElementById('con-status').innerText = "Error";
+    }
+}
 
-        // Actualiza cada 1 segundo
-        setInterval(refreshData, 1000);
-    </script>
+setInterval(refreshData, 1000);
+</script>
+
 </body>
 </html>
