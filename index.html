@@ -84,6 +84,7 @@ body {
     height: 80px;
     background: #ff4444;
     border-radius: 20px;
+    transition: left 0.5s ease;
 }
 
 .car::before {
@@ -190,6 +191,9 @@ async function refreshData() {
             document.getElementById('r').classList.toggle('active', val < 10);
             document.getElementById('a').classList.toggle('active', val >= 10 && val <= 30);
             document.getElementById('v').classList.toggle('active', val > 30);
+
+            // mover carro
+            moverCarro(val);
         }
     } catch (e) {
         document.getElementById('con-status').innerText = "Error";
@@ -197,7 +201,29 @@ async function refreshData() {
 }
 
 setInterval(refreshData, 1000);
+
+// MOVER CARRO SEGÚN DISTANCIA
+function moverCarro(val) {
+    const car = document.querySelector('.car');
+
+    // Ajusta el rango (0 a 100 cm por ejemplo)
+    let min = 0;
+    let max = 100;
+
+    if (val < min) val = min;
+    if (val > max) val = max;
+
+    // Convertir a porcentaje de pantalla
+    let porcentaje = (val - min) / (max - min);
+
+    // Limitar movimiento en pantalla (10% a 90%)
+    let posicion = 10 + porcentaje * 80;
+
+    car.style.left = posicion + '%';
+}
+
 </script>
 
 </body>
 </html>
+
